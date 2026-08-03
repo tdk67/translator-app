@@ -37,6 +37,19 @@ This project utilizes Python 3.12. Follow these steps to set up the project loca
 
 ---
 
+## Obtaining a Gemini API Key
+
+To use the translation and extraction features, you will need a free Google Gemini API Key.
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Sign in with your Google account.
+3. Click the **"Create API Key"** button.
+4. Copy the generated key. You can paste this directly into the sidebar of the running app, or you can save it inside a `.env` file in the root of the project like this:
+   ```env
+   GEMINI_API_KEY="your_api_key_here"
+   ```
+
+---
+
 ## Detailed Usage Guide
 
 1. Make sure your virtual environment is activated.
