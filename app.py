@@ -72,23 +72,29 @@ if "audio_bytes" not in st.session_state:
 # --- Helper Functions ---
 def perform_translation(text):
     with st.spinner("Translating..."):
-        res = st.session_state.gemini_client.translate_text(text, target_language)
-        if "Error" not in res.get('translation', ''):
+        try:
+            res = st.session_state.gemini_client.translate_text(text, target_language)
             st.session_state.translation_result = res['translation']
-        else:
-            st.error(res['translation'])
-        return res
+            return res
+        except Exception as e:
+            st.error(f"Translation Error: {e}")
+            return {}
 
 def perform_tts(text, lang_code=None):
     with st.spinner("Generating Audio..."):
         if not lang_code:
-            lang_code = LANGUAGES.get(target_language, "en")
+            lang_code = LANGUAGES.get(target_language)
+            if not lang_code:
+                st.error("Configuration Error: No valid language code found for the selected language.")
+                return
             
         # Strip markdown formatting so the TTS engine reads simple text
         try:
             html = markdown.markdown(text)
             clean_text = "".join(BeautifulSoup(html, "html.parser").findAll(string=True))
-        except Exception as e:
+            if not clean_text.strip():
+                clean_text = text
+        except Exception:
             clean_text = text # Fallback in case of parsing error
             
         try:
@@ -124,8 +130,10 @@ with col1:
                     csv_text = result.to_csv(index=False)
                     st.session_state.doc_viewer = csv_text
                 st.success("Extraction complete!")
+            except ValueError as e:
+                st.error(f"Data format error: {e}")
             except Exception as e:
-                st.error(f"Error processing file: {e}")
+                st.error(f"Unexpected error processing file: {e}")
 
 with col2:
     st.subheader("Or Record Voice")
@@ -137,10 +145,15 @@ with col2:
             mime_type = "audio/webm" if "webm" in audio.get('format', 'webm') else "audio/wav"
             # We use target_language=English as a base for transcription if we just want raw text, 
             # but actually the user can just translate it later. So we extract transcription.
-            res = st.session_state.gemini_client.transcribe_and_translate_audio(
-                audio['bytes'], mime_type, target_language="English" 
-            )
-            transcription = res.get('transcription', '')
+            try:
+                res = st.session_state.gemini_client.transcribe_and_translate_audio(
+                    audio['bytes'], mime_type, target_language="English" 
+                )
+                transcription = res.get('transcription', '')
+            except Exception as e:
+                st.error(f"Transcription Error: {e}")
+                transcription = ""
+                
             if transcription:
                 # Append to document text or replace
                 if st.session_state.doc_viewer:

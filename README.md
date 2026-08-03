@@ -108,11 +108,30 @@ pytest tests/
 PYTHONPATH="." pytest tests/
 ```
 
+### Generating a Test Coverage Report
+
+To see exactly how much of your codebase is covered by the tests, you can use the `pytest-cov` plugin:
+
+```bash
+# First, ensure you have the coverage plugin installed
+pip install pytest-cov
+
+# Run the tests with the coverage flag, specifically targeting the 'modules' folder
+# On Windows (PowerShell):
+$env:PYTHONPATH="."
+pytest --cov=modules tests/
+
+# On macOS/Linux:
+PYTHONPATH="." pytest --cov=modules tests/
+```
+This will print out a table in your terminal showing the total percentage of lines of code that were successfully executed during the test run.
+
 ### Test Suites Breakdown
 
 **1. `test_gemini_client.py`**
 - **`test_guardrails_malicious_input`**: Simulates an attempt at prompt injection (e.g., asking the AI to ignore instructions). Verifies that the internal guardrails intercept it and return a safe error state instead of executing the translation request.
 - **`test_guardrails_safe_input`**: Ensures that normal conversational texts are not falsely flagged as malicious.
+- **`test_json_parse_error`**: Tests resilience against LLM hallucinations by passing non-JSON raw text to the parser, verifying it safely throws a `JSONParseError` instead of causing a generic crash.
 - **`test_translate_text_integration`**: A live integration test that connects to the Gemini API (using your `.env` API key). It sends a real translation request (English to Spanish) and verifies that both the translation and the JSON structure response are correctly formed.
 
 **2. `test_tts_engine.py`**
@@ -123,6 +142,8 @@ PYTHONPATH="." pytest tests/
 
 **3. `test_file_processor.py`**
 - **`test_translate_dataframe`**: A purely offline unit test using a mocked translator function. It builds a dummy Pandas DataFrame (simulating an uploaded Excel/CSV), verifies that valid string cells are translated accurately, and confirms that integers and blank cells are skipped to prevent corrupting table data types.
+- **`test_translate_empty_dataframe`**: Verifies that submitting a completely empty DataFrame gracefully passes through the logic loop without causing an index out-of-bounds crash.
 - **`test_extract_text_from_pdf`**: Mocks the internal `MarkItDown` Microsoft PDF parser dependencies. It verifies that when binary PDF bytes are passed, the function returns clean text strings without requiring a live external PDF processing service.
 - **`test_process_file_upload_txt`**: Tests the generic file upload handler to verify standard `.txt` files are decoded cleanly.
 - **`test_process_file_upload_csv`**: Tests the generic file upload handler to ensure CSV/Excel byte streams are properly routed and parsed into structured Pandas DataFrames.
+- **`test_process_file_upload_empty_csv`**: Asserts that passing a 0-byte CSV explicitly throws a readable ValueError ("empty CSV file uploaded") instead of returning unhandled Pandas empty data exceptions to the user UI.

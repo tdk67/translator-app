@@ -20,6 +20,9 @@ def translate_dataframe(df: pd.DataFrame, translator_func, target_language: str)
     Translates all string columns in a DataFrame cell by cell.
     translator_func should be a callable like: lambda text, lang: string
     """
+    if df.empty:
+        return df.copy()
+
     translated_df = df.copy()
     
     for col in translated_df.columns:
@@ -43,12 +46,23 @@ def process_file_upload(uploaded_file, file_type: str, translator_func=None, tar
     elif file_type == 'txt':
         return file_bytes.decode('utf-8'), 'text'
     elif file_type == 'csv':
-        df = pd.read_csv(io.BytesIO(file_bytes))
+        try:
+            df = pd.read_csv(io.BytesIO(file_bytes))
+        except pd.errors.EmptyDataError as e:
+            logger.error(f"Empty CSV file uploaded: {e}")
+            raise ValueError("The uploaded CSV file is empty.") from e
+            
         if translator_func and target_language:
             df = translate_dataframe(df, translator_func, target_language)
         return df, 'dataframe'
     elif file_type in ['xlsx', 'xls', 'excel']:
-        df = pd.read_excel(io.BytesIO(file_bytes))
+        try:
+            df = pd.read_excel(io.BytesIO(file_bytes))
+        except ValueError as e:
+            # openpyxl raises ValueError for bad/empty Excel formats occasionally
+            logger.error(f"Excel read error: {e}")
+            raise ValueError(f"Failed to read Excel file: {str(e)}") from e
+            
         if translator_func and target_language:
             df = translate_dataframe(df, translator_func, target_language)
         return df, 'dataframe'

@@ -5,3 +5,14 @@ __pycache__/
 temp_audio/
 .env
 .DS_Store
+
+# AI Agent Configs
+.claude/
+.agents/
+
+# Media & Documents
+*.pdf
+*.mp3
+
+# Testing
+.coverage

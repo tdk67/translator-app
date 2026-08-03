@@ -23,6 +23,11 @@ def test_translate_dataframe():
     assert pd.isnull(translated_df.loc[1, "B"])
     assert translated_df.loc[2, "B"] == ""  # Empty string untouched
 
+def test_translate_empty_dataframe():
+    df = pd.DataFrame()
+    translated_df = translate_dataframe(df, dummy_translator, "es")
+    assert translated_df.empty
+
 @patch('modules.file_processor.MarkItDown')
 def test_extract_text_from_pdf(mock_markitdown):
     # Mock PDF behavior
@@ -54,3 +59,11 @@ def test_process_file_upload_csv():
     assert isinstance(result, pd.DataFrame)
     assert file_type == "dataframe"
     assert result.loc[0, "col1"] == "val1"
+
+def test_process_file_upload_empty_csv():
+    class DummyFile:
+        def read(self):
+            return b""
+            
+    with pytest.raises(ValueError, match="empty"):
+        process_file_upload(DummyFile(), 'csv')

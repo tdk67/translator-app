@@ -2,10 +2,13 @@ from gtts import gTTS
 import os
 import uuid
 import logging
+import io
 
 logger = logging.getLogger(__name__)
 
-import io
+class TTSAPIError(RuntimeError):
+    """Raised when the TTS external API fails."""
+    pass
 
 class TTSEngine:
     def __init__(self):
@@ -26,8 +29,8 @@ class TTSEngine:
                 tts.write_to_fp(fp)
                 return fp.getvalue()
             except Exception as e:
-                logger.error(f"gTTS generation failed: {e}")
-                raise e
+                logger.error(f"gTTS API connection failed: {e}")
+                raise TTSAPIError(f"Failed to connect to TTS API: {str(e)}") from e
         elif engine == 'Google':
             logger.warning("Google TTS placeholder invoked. Falling back to gTTS for now.")
             return self.generate_audio(text, lang, engine='gTTS')
