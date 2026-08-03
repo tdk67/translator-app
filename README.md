@@ -147,3 +147,19 @@ This will print out a table in your terminal showing the total percentage of lin
 - **`test_process_file_upload_txt`**: Tests the generic file upload handler to verify standard `.txt` files are decoded cleanly.
 - **`test_process_file_upload_csv`**: Tests the generic file upload handler to ensure CSV/Excel byte streams are properly routed and parsed into structured Pandas DataFrames.
 - **`test_process_file_upload_empty_csv`**: Asserts that passing a 0-byte CSV explicitly throws a readable ValueError ("empty CSV file uploaded") instead of returning unhandled Pandas empty data exceptions to the user UI.
+
+---
+
+## Deployment
+
+The easiest and most seamless way to deploy this application is using **Streamlit Community Cloud**, which is free and connects directly to your GitHub repository.
+
+### Steps to Deploy on Streamlit Community Cloud:
+1. Make sure your code is pushed to a public (or private) repository on GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io/) and log in with your GitHub account.
+3. Click the **"New app"** button.
+4. Select the repository, branch (usually `main`), and the main file path (`app.py`).
+5. **Important:** Before clicking deploy, click on **"Advanced settings..."**. In the **Secrets** box, you can securely add your API keys or environmental variables so they aren't exposed in your public code. However, since the app has a UI sidebar where users can input their own Gemini API key, adding it to the secrets is optional.
+6. Click **Deploy!**
+
+Because we refactored the audio generation (`tts_engine.py`) to hold MP3 files strictly in memory (byte streams) instead of writing physical `temp_audio` files to the disk, this application is completely "stateless". This means it is 100% compatible with serverless cloud environments like Streamlit Cloud, Render, or Heroku, which typically block apps from writing files locally.
