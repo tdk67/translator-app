@@ -1,0 +1,23 @@
+{
+  "gemini": {
+    "model_name": "gemini-3.5-flash"
+  },
+  "languages": {
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+    "Italian": "it",
+    "Portuguese": "pt",
+    "Dutch": "nl",
+    "Russian": "ru",
+    "Mandarin Chinese": "zh-CN",
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Hindi": "hi",
+    "Arabic": "ar",
+    "English": "en"
+  },
+  "tts": {
+    "engines": ["gTTS", "Google"]
+  }
+}

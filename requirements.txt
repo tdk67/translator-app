@@ -1,0 +1,11 @@
+streamlit
+google-genai
+gTTS
+pandas
+PyPDF2
+pdfplumber
+openpyxl
+streamlit-mic-recorder
+pytest
+pytest-asyncio
+python-dotenv
