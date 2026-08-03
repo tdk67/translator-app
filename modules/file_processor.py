@@ -1,20 +1,16 @@
 import pandas as pd
-import pdfplumber
+from markitdown import MarkItDown
 import io
 import logging
 
 logger = logging.getLogger(__name__)
 
 def extract_text_from_pdf(file_bytes) -> str:
-    """Extracts all text from a PDF file."""
-    text = []
+    """Extracts all text from a PDF file as Markdown to preserve formatting."""
     try:
-        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            for page in pdf.pages:
-                extracted = page.extract_text()
-                if extracted:
-                    text.append(extracted)
-        return "\n".join(text)
+        md = MarkItDown()
+        result = md.convert_stream(io.BytesIO(file_bytes), file_extension='.pdf')
+        return result.text_content
     except Exception as e:
         logger.error(f"Failed to extract text from PDF: {e}")
         return f"Error extracting PDF: {str(e)}"

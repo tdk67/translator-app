@@ -8,4 +8,7 @@ openpyxl
 streamlit-mic-recorder
 pytest
 pytest-asyncio
+markitdown
+beautifulsoup4
+markdown
 python-dotenv

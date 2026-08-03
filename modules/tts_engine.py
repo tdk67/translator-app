@@ -5,28 +5,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class TTSEngine:
-    def __init__(self, output_dir="temp_audio"):
-        self.output_dir = output_dir
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
+import io
 
-    def generate_audio(self, text: str, lang: str = 'en', engine: str = 'gTTS') -> str:
+class TTSEngine:
+    def __init__(self):
+        pass
+
+    def generate_audio(self, text: str, lang: str = 'en', engine: str = 'gTTS') -> bytes:
         """
         Generates audio from text using the specified engine.
-        Returns the path to the generated audio file.
+        Returns the raw audio bytes.
         """
         if not text:
             raise ValueError("Text cannot be empty for TTS generation.")
 
-        filename = f"{uuid.uuid4()}.mp3"
-        filepath = os.path.join(self.output_dir, filename)
-
         if engine == 'gTTS':
             try:
                 tts = gTTS(text=text, lang=lang, slow=False)
-                tts.save(filepath)
-                return filepath
+                fp = io.BytesIO()
+                tts.write_to_fp(fp)
+                return fp.getvalue()
             except Exception as e:
                 logger.error(f"gTTS generation failed: {e}")
                 raise e
@@ -38,10 +36,6 @@ class TTSEngine:
 
     def cleanup(self, filepath: str):
         """
-        Utility to clean up generated audio files.
+        Deprecated. Cleanup is no longer necessary as audio is kept in memory.
         """
-        if os.path.exists(filepath):
-            try:
-                os.remove(filepath)
-            except Exception as e:
-                logger.error(f"Failed to remove {filepath}: {e}")
+        pass

@@ -78,6 +78,27 @@ class GeminiClient:
                 "translation": f"An error occurred during audio processing: {str(e)}"
             }
 
+    def extract_pdf_markdown(self, pdf_bytes: bytes) -> str:
+        """
+        Takes PDF bytes and extracts text as Markdown preserving formatting.
+        """
+        prompt = """
+        Extract all text from this document and output it as Markdown, preserving the original formatting (headers, lists, bold text, tables, etc.) exactly. 
+        Do not add any extra conversational text. If the document has a specific visual structure, represent it as best as you can in Markdown.
+        """
+        try:
+            if not self.client:
+                raise ValueError("API Key is missing")
+            pdf_part = types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[prompt, pdf_part]
+            )
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"PDF extraction error: {e}")
+            return f"An error occurred during PDF extraction: {str(e)}"
+
     def _parse_json_response(self, text: str) -> dict:
         output_text = text.strip()
         if output_text.startswith("```json"):

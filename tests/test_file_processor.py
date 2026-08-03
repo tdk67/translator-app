@@ -23,21 +23,18 @@ def test_translate_dataframe():
     assert pd.isnull(translated_df.loc[1, "B"])
     assert translated_df.loc[2, "B"] == ""  # Empty string untouched
 
-@patch('modules.file_processor.pdfplumber.open')
-def test_extract_text_from_pdf(mock_pdfplumber_open):
+@patch('modules.file_processor.MarkItDown')
+def test_extract_text_from_pdf(mock_markitdown):
     # Mock PDF behavior
-    mock_pdf = MagicMock()
-    mock_page1 = MagicMock()
-    mock_page1.extract_text.return_value = "Page 1 Text."
-    mock_page2 = MagicMock()
-    mock_page2.extract_text.return_value = "Page 2 Text."
-    
-    mock_pdf.pages = [mock_page1, mock_page2]
-    mock_pdfplumber_open.return_value.__enter__.return_value = mock_pdf
+    mock_instance = MagicMock()
+    mock_result = MagicMock()
+    mock_result.text_content = "# Page 1 Text."
+    mock_instance.convert_stream.return_value = mock_result
+    mock_markitdown.return_value = mock_instance
 
     result = extract_text_from_pdf(b'fake_pdf_bytes')
     
-    assert result == "Page 1 Text.\nPage 2 Text."
+    assert result == "# Page 1 Text."
 
 def test_process_file_upload_txt():
     class DummyFile:

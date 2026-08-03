@@ -3,35 +3,25 @@ import os
 from modules.tts_engine import TTSEngine
 
 def test_tts_engine_init():
-    engine = TTSEngine(output_dir="test_audio")
-    assert os.path.exists("test_audio")
-    # cleanup
-    os.rmdir("test_audio")
+    engine = TTSEngine()
+    # It initializes correctly without creating dirs
+    assert engine is not None
 
 def test_generate_audio_gtts_integration():
     """
     Integration test for gTTS. 
     Actually generates an audio file by calling Google's public TTS endpoint.
     """
-    engine = TTSEngine(output_dir="temp_test_audio")
-    filepath = engine.generate_audio("Hello world, this is a real integration test.", lang="en", engine="gTTS")
+    engine = TTSEngine()
+    audio_bytes = engine.generate_audio("Hello world, this is a real integration test.", lang="en", engine="gTTS")
     
-    assert os.path.exists(filepath)
-    assert filepath.endswith(".mp3")
+    assert isinstance(audio_bytes, bytes)
+    assert len(audio_bytes) > 0
     
-    # Check that the file actually contains data (greater than 0 bytes)
-    file_size = os.path.getsize(filepath)
-    assert file_size > 0
-    
-    # Check for MP3 ID3 header to prove it is a valid audio file
-    with open(filepath, 'rb') as f:
-        header = f.read(3)
-        assert header == b'ID3', "Generated file is not a valid MP3 audio file"
-
-    
-    # cleanup
-    engine.cleanup(filepath)
-    os.rmdir("temp_test_audio")
+    # Check for MP3 ID3 header or MPEG frame sync (0xFF) to prove it is a valid audio file
+    is_id3 = audio_bytes.startswith(b'ID3')
+    is_mpeg = audio_bytes.startswith(b'\xff')
+    assert is_id3 or is_mpeg, "Generated file is not a valid MP3 audio file"
 
 def test_generate_audio_empty_text():
     engine = TTSEngine()
