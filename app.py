@@ -169,11 +169,11 @@ st.write("---")
 st.subheader("2. Document Viewer")
 st.info("Copy the specific text you want to process from here, or type directly into the 'Text to Process' box below.")
 st.write("**Original Text** (Read-Only/Copy from here)")
-with st.container(height=300, border=True):
-    if st.session_state.doc_viewer:
+if st.session_state.doc_viewer:
+    with st.container(height=300, border=True):
         st.markdown(st.session_state.doc_viewer)
-    else:
-        st.write("No document loaded yet.")
+else:
+    st.write("No document loaded yet. You can type directly into the **Text to Process** box below!")
 
 # --- Processing Box ---
 st.write("---")
