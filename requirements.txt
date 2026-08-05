@@ -12,3 +12,4 @@ markitdown
 beautifulsoup4
 markdown
 python-dotenv
+starlette<0.40.0
