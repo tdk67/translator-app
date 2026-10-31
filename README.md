@@ -1,72 +1,136 @@
 # Globetrotter: Selective Translation & TTS
-A Generative AI and ML Capstone Project
-
-## Overview
-The goal of this capstone project is to develop a web application using Streamlit that enables users to translate text into various languages, convert the translated text into speech, and download the resulting audio file. The project leverages **Google's Gemini API** for deep, context-aware translation and PDF layout preservation, alongside **Google Text-to-Speech (gTTS)** for speech synthesis.
-
-## Features
-- **Direct Text Input:** Type or paste text instantly into the processor.
-- **Microphone Input:** Record audio directly in the browser. The audio is transcribed and sent to the Document Viewer using Gemini.
-- **Smart File Extraction:** Upload PDF, TXT, CSV, or Excel files. Text files are read natively, dataframes are parsed safely, and PDFs are sent directly to Gemini to perfectly preserve their visual formatting (headers, tables, bold text) as Markdown.
-- **Selective Translation:** Copy specific snippets of the extracted document to translate, instead of being forced to translate the entire document.
-- **In-Memory Audio Generation (TTS):** Generates an MP3 audio stream of both the original and translated texts. The audio is stored in memory (bypassing local file storage restrictions for seamless cloud deployment) and can be downloaded instantly.
-- **Guardrails:** Prevents prompt injection and handles malicious AI inputs gracefully.
+**Generative AI and ML Capstone Project**  
+*Edureka & Illinois Institute of Technology*
 
 ---
 
-## Installation
+## Overview
 
-This project utilizes Python 3.12. Follow these steps to set up the project locally:
+The **Globetrotter** application is a production-grade, interactive web system built with **Streamlit** that enables users to translate text across multiple languages, synthesize the translated text into spoken audio, and download the resulting MP3 audio file. 
 
-1. **Clone or Download the Repository** and extract the files to your local directory.
-   
-2. **Set up a Virtual Environment:**
-   It is highly recommended to use a virtual environment to manage dependencies.
-   ```bash
-   python -m venv .venv
-   ```
+The system leverages **Google's Gemini 3.5 Flash API** for context-aware language translation, audio transcription, and layout-preserving PDF extraction, paired with **Google Text-to-Speech (gTTS)** for speech synthesis. The backend is engineered according to **Clean Hexagonal Architecture**, **Zero Absolute Paths**, and **Fail-Fast Configuration** standards.
 
-3. **Activate the Virtual Environment:**
-   - On **Windows**: `.venv\Scripts\activate`
-   - On **macOS/Linux**: `source .venv/bin/activate`
+---
 
-4. **Install Dependencies:**
+## System Architecture
+
+The application is structured in four decoupled layers ensuring single responsibility and stateless cloud execution:
+
+![Globetrotter Architecture](architecture.png)
+
+> **Excalidraw Editable Diagram:** The editable vector diagram is stored in [`architecture.excalidraw`](architecture.excalidraw). Detailed architectural decisions are documented in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+```mermaid
+graph TD
+    subgraph Presentation_Layer [1. Presentation Layer - app.py]
+        UI_Input[Document Uploader & Voice Recorder]
+        UI_Viewer[Markdown Document Viewer]
+        UI_Process[Selective Workspace & Language Selector]
+        UI_Output[In-Memory Audio Player & Download Actions]
+    end
+
+    subgraph Service_Layer [2. Domain & Application Services]
+        Router[modules/file_processor.py Router]
+        Guardrails[Security Guardrails: Prompt Injection Defense]
+        Sanitizer[Text Sanitizer & Markdown Stripper]
+    end
+
+    subgraph Adapter_Layer [3. Hexagonal Adapters]
+        GeminiAdapter[modules/gemini_client.py Adapter]
+        TTSAdapter[modules/tts_engine.py Adapter]
+    end
+
+    subgraph Infrastructure_Layer [4. External Infrastructure]
+        GeminiAPI[Google Gemini 3.5 Flash API]
+        TTSAPI[Google Text-to-Speech Endpoint]
+        CloudHost[Streamlit Community Cloud]
+    end
+
+    UI_Input --> Router
+    UI_Process --> Guardrails
+    Guardrails --> GeminiAdapter
+    UI_Process --> Sanitizer
+    Sanitizer --> TTSAdapter
+
+    Router --> GeminiAdapter
+    GeminiAdapter --> GeminiAPI
+    TTSAdapter --> TTSAPI
+```
+
+---
+
+## Core Features
+
+1. **Direct Text & Selective Processing:** Type or paste arbitrary text into the workspace, or selectively copy extracted document sections.
+2. **Multi-Format Document Upload:** Seamless ingestion of **PDF**, **TXT**, **CSV**, and **Excel (`.xlsx`, `.xls`)** files.
+3. **Multimodal Document Understanding:** PDFs are processed via Gemini's multimodal vision endpoint, perfectly preserving Markdown headers, lists, and tabular formatting.
+4. **Voice Recording & Transcription:** Built-in microphone audio recorder capturing speech directly in the browser, transcribed via Gemini.
+5. **Context-Aware Translation & Language Detection:** Automatically identifies source languages and returns accurate, culturally coherent translations into 13+ languages.
+6. **In-Memory Audio Generation (Stateless TTS):** Synthesizes high-fidelity MP3 audio streams entirely within memory buffers (`io.BytesIO`), bypassing ephemeral local disk restrictions on serverless platforms.
+7. **Security Guardrails:** Built-in prompt injection filters intercepting adversarial instructions before submission to the LLM.
+
+---
+
+## Installation & Local Setup
+
+### Prerequisites
+- Python 3.12 (specified in `.python-version`)
+
+### Steps
+
+1. **Set up a Virtual Environment:**
+   - **Windows (PowerShell):**
+     ```powershell
+     python -m venv .venv
+     .\.venv\Scripts\activate
+     ```
+   - **macOS / Linux:**
+     ```bash
+     python3 -m venv .venv
+     source .venv/bin/activate
+     ```
+
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
 ---
 
-## Obtaining a Gemini API Key
+## Obtaining & Configuring the Gemini API Key
 
-To use the translation and extraction features, you will need a free Google Gemini API Key.
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Sign in with your Google account.
-3. Click the **"Create API Key"** button.
-4. Copy the generated key. You can paste this directly into the sidebar of the running app, or you can save it inside a `.env` file in the root of the project like this:
-   ```env
-   GEMINI_API_KEY="your_api_key_here"
-   ```
+To use translation, transcription, and PDF extraction:
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Sign in with your Google account and click **"Create API Key"**.
+3. Copy the generated API key.
+4. You can provide the key in either of two ways:
+   - **Option A (Recommended for local dev):** Create a `.env` file in the project root:
+     ```env
+     GEMINI_API_KEY="AIzaSy..."
+     ```
+   - **Option B (In-App):** Enter the key directly into the sidebar password field in the running web application.
 
 ---
 
-## Detailed Usage Guide
+## Usage Guide
 
-1. Make sure your virtual environment is activated.
-2. Run the Streamlit application:
+1. Start the Streamlit application:
    ```bash
    streamlit run app.py
    ```
-3. Open your browser to `http://localhost:8501`.
-4. **Configuration:** Expand the sidebar on the left. Enter your **Google Gemini API Key** and choose your Target Language (e.g., Spanish, French).
-5. **Populate the Document Viewer:** 
-   - **Upload** a PDF, TXT, or CSV file. The text will instantly populate in the "Document Viewer" panel. PDFs will retain their rich formatting (Markdown).
-   - **Or Record** your voice. It will transcribe your speech and append it to the Document Viewer.
-6. **Process the Text:**
-   - Copy the specific chunk of text you want from the Document Viewer and paste it into the **"Text to Process"** box.
-   - Click **"Translate Selected Text"** to translate it using Gemini.
-   - Click **"Generate Audio (Original)"** or **"Generate Audio (Translated)"** to hear the text spoken aloud. The underlying Markdown is stripped cleanly before reaching the TTS engine.
-   - Download the text or the generated MP3 file via the respective download buttons.
+2. Navigate to `http://localhost:8501` in your browser.
+3. **Configuration:** Expand the left sidebar, enter/verify your Gemini API Key, and select your Target Language (e.g., Spanish, German, Japanese).
+4. **Load Text:**
+   - **Upload a Document:** Drop a PDF, TXT, CSV, or Excel file into the uploader and click **"Extract Text from File"**.
+   - **Or Record Voice:** Click **"Start Recording"** to capture microphone audio; click **"Stop Recording"** to transcribe.
+5. **Select & Process:**
+   - Copy relevant text from the read-only Document Viewer into the **"Text to Process"** area.
+   - Click **"🌐 Translate Selected Text"** to perform context-aware translation.
+   - Click **"🔊 Generate Audio (Original)"** or **"🔊 Generate Audio (Translated)"** to synthesize speech.
+6. **Download Results:**
+   - Download the translated text file via **"📥 Download Translated Text"**.
+   - Download the MP3 audio file via **"📥 Download Audio File"**.
 
 ---
 
@@ -74,105 +138,134 @@ To use the translation and extraction features, you will need a free Google Gemi
 
 ```text
 Edureka-Capstone-Translation/
+├── .env.example                # Safe environment template (zero secrets committed)
+├── .gitignore                  # Git exclusions (.venv, .env, __pycache__)
+├── .python-version             # Python version pin (3.12)
+├── app.py                      # Presentation Layer: Streamlit UI, state, and widget layout
+├── config.json                 # Fail-fast operational configuration (models, languages, TTS engines)
+├── requirements.txt            # Production dependencies
+├── architecture.excalidraw     # Editable vector architecture diagram (Excalidraw format)
+├── architecture.svg / .png     # Visual architecture diagrams
+├── ARCHITECTURE.md             # Detailed architectural specification
+├── README.md                   # Comprehensive documentation and project guide
+├── README_PDF.md               # PDF export documentation source
+├── README_PDF.pdf              # Compiled submission PDF document
 │
-├── app.py                      # Main Streamlit application entry point. Handles the UI, state, and wiring.
-├── config.json                 # Configuration file for model names, supported languages, and TTS options.
-├── requirements.txt            # List of Python dependencies required to run the project.
-│
-├── modules/                    # Core business logic and modularized backend services
+├── modules/                    # Domain Services & Hexagonal Adapters
 │   ├── __init__.py
-│   ├── file_processor.py       # Handles TXT, CSV, Excel parsing and translates DataFrames cell-by-cell.
-│   ├── gemini_client.py        # Wrapper class for the Google GenAI SDK. Handles API requests, PDF Vision extraction, guardrails, and JSON parsing.
-│   └── tts_engine.py           # Handles Text-to-Speech conversion using gTTS and in-memory byte streaming.
+│   ├── file_processor.py       # Domain router for PDF, TXT, CSV, and Excel file handling
+│   ├── gemini_client.py        # Hexagonal adapter for Google GenAI SDK (translation & OCR)
+│   └── tts_engine.py           # Hexagonal adapter for gTTS audio generation & text sanitization
 │
-└── tests/                      # Pytest unit and integration test suite
-    ├── __init__.py
-    ├── test_file_processor.py  # Mocks file parsing and DataFrame logic for validation.
-    ├── test_gemini_client.py   # Validates prompt injection blocks and checks error handling.
-    └── test_tts_engine.py      # Verifies in-memory MP3 byte generation and ID3 header validation.
+├── tests/                      # Automated Pytest Suite
+│   ├── __init__.py
+│   ├── test_file_processor.py  # Unit tests for DataFrame parsing and file router
+│   ├── test_gemini_client.py   # Unit & integration tests for prompt guardrails & API responses
+│   └── test_tts_engine.py      # Unit & integration tests for markdown stripping & MP3 headers
+│
+└── screenshots/                # Application execution walkthrough screenshots
+    ├── capstone-001.png        # Initial landing view
+    ├── capstone-002.png        # Input text entry
+    ├── capstone-003.png        # Document viewer loaded
+    ├── capstone-004.png        # Workspace text selection
+    ├── capstone-005.png        # Translation result & language detection
+    ├── capstone-006.png        # Audio player & synthesis
+    └── capstone-007.png        # Full-page dashboard overview
 ```
 
 ---
 
-## Libraries Used & Why
+## Considerations, Limitations, and Challenges Faced
 
-- **`streamlit`**: The core frontend framework used to build the interactive web UI rapidly without needing to write raw HTML/JS/CSS.
-- **`google-genai`**: The official, up-to-date Google GenAI SDK. It's used to connect to the Gemini API (`gemini-3.5-flash`) for text translation, audio transcription, and intelligent PDF-to-Markdown extraction.
-- **`gTTS` (Google Text-to-Speech)**: Used as the primary Text-to-Speech engine. It sends text to Google's public Translate TTS API to retrieve human-sounding audio bytes.
-- **`pandas` & `openpyxl`**: Used in `file_processor.py` for reading, parsing, and iterating through tabular data structures like CSV and Excel files.
-- **`streamlit_mic_recorder`**: A specialized Streamlit component that allows capturing microphone audio directly from the user's web browser and passing it back to Python.
-- **`markitdown`, `beautifulsoup4`, & `markdown`**: Used to intelligently clean and strip rich markdown formatting from text right before it hits the TTS engine, ensuring the audio reader doesn't pronounce markdown symbols (like asterisks or hash marks).
-- **`python-dotenv`**: Used to safely load environment variables (like `GEMINI_API_KEY`) from a `.env` file instead of hardcoding secrets into the source code.
-- **`pytest` & `pytest-asyncio`**: The testing framework used to ensure each module behaves reliably and correctly handles mock data or integration edge cases.
+### 1. Considerations
+- **Stateless Cloud Execution:** Serverless environments (Streamlit Cloud, Heroku) feature ephemeral filesystems where writing temporary `.mp3` files causes I/O bottlenecks and race conditions. The system was designed to stream audio strictly in-memory via `io.BytesIO`.
+- **Text Sanitization for Speech:** Direct conversion of rich Markdown into audio leads to the TTS engine vocalizing formatting characters (`hashtag`, `asterisk`, `link`). An automated sanitization filter was introduced to strip HTML and Markdown syntax before synthesis.
+- **Fail-Fast Operational Reliability:** To prevent silent failures in production, the application enforces dynamic path resolution (`Path(__file__).resolve().parent`) and strict dictionary lookups that raise explicit errors immediately if configuration keys are missing.
+- **Prompt Injection Defense:** LLM inputs are evaluated through heuristic guardrails to block prompt-hijacking attempts before querying external APIs.
+
+### 2. Limitations
+- **gTTS Endpoint Constraints:** `gTTS` relies on Google's public translation TTS interface. While producing natural pronunciation, it does not support fine-grained pitch, timbre, or speaking-speed modulation.
+- **Free-Tier API Quotas:** Google Gemini API free-tier quotas enforce requests-per-minute (RPM) limits. High-frequency automated calls may trigger rate limits.
+- **Very Large Tabular Files:** Extremely large CSV or Excel files (thousands of rows) require batch chunking to avoid exceeding context window limits during cell-by-cell translation.
+
+### 3. Challenges Faced & Solutions
+- **Challenge 1: Preserving PDF Layout & Tables**  
+  *Issue:* Standard open-source PDF extractors strip visual whitespace, collapsing tables and headers into unintelligible text blocks.  
+  *Solution:* Integrated Gemini's multimodal vision endpoint, passing document bytes directly to generate clean, structured Markdown that mirrors the original visual hierarchy.
+- **Challenge 2: TTS Vocalizing Formatting Syntax**  
+  *Issue:* When translating structured documents, the generated output contains Markdown syntax (e.g. `### Heading`, `**bold**`, `| col |`). gTTS pronounced these characters verbatim.  
+  *Solution:* Implemented `TTSEngine.strip_markdown()`, using `markdown` and `BeautifulSoup` to strip formatting tags while preserving the underlying phonetic text.
+- **Challenge 3: Multi-Script Font Rendering in Streamlit**  
+  *Issue:* Non-Latin alphabets (particularly Hindi / Devanagari script) suffered glyph truncation and uneven line spacing in standard browser text areas.  
+  *Solution:* Injected custom CSS loading the Google Font `Noto Sans Devanagari` globally to ensure clean typography across all supported languages.
 
 ---
 
-## Running Tests
+## Automated Testing & Verification
 
-The project includes a suite of unit tests built with `pytest` to ensure core functionalities work.
+The project includes an automated test suite with **17 unit and integration tests** built with `pytest`:
 
 ```bash
-# Ensure PYTHONPATH is set to the current directory so modules can be imported
-# On Windows (PowerShell):
+# Set PYTHONPATH to project root and run tests
+# Windows (PowerShell):
 $env:PYTHONPATH="."
-pytest tests/
+.\.venv\Scripts\python -m pytest -v tests/
 
-# On macOS/Linux:
-PYTHONPATH="." pytest tests/
+# macOS / Linux:
+PYTHONPATH="." python3 -m pytest -v tests/
 ```
 
-### Generating a Test Coverage Report
-
-To see exactly how much of your codebase is covered by the tests, you can use the `pytest-cov` plugin:
-
+### Coverage Report
 ```bash
-# First, ensure you have the coverage plugin installed
-pip install pytest-cov
-
-# Run the tests with the coverage flag, specifically targeting the 'modules' folder
-# On Windows (PowerShell):
-$env:PYTHONPATH="."
-pytest --cov=modules tests/
-
-# On macOS/Linux:
-PYTHONPATH="." pytest --cov=modules tests/
+.\.venv\Scripts\python -m pytest --cov=modules tests/
 ```
-This will print out a table in your terminal showing the total percentage of lines of code that were successfully executed during the test run.
 
-### Test Suites Breakdown
-
-**1. `test_gemini_client.py`**
-- **`test_guardrails_malicious_input`**: Simulates an attempt at prompt injection (e.g., asking the AI to ignore instructions). Verifies that the internal guardrails intercept it and return a safe error state instead of executing the translation request.
-- **`test_guardrails_safe_input`**: Ensures that normal conversational texts are not falsely flagged as malicious.
-- **`test_json_parse_error`**: Tests resilience against LLM hallucinations by passing non-JSON raw text to the parser, verifying it safely throws a `JSONParseError` instead of causing a generic crash.
-- **`test_translate_text_integration`**: A live integration test that connects to the Gemini API (using your `.env` API key). It sends a real translation request (English to Spanish) and verifies that both the translation and the JSON structure response are correctly formed.
-
-**2. `test_tts_engine.py`**
-- **`test_tts_engine_init`**: Tests that the TTSEngine class initializes properly without unexpected filesystem dependencies.
-- **`test_generate_audio_gtts_integration`**: A live integration test that requests Google's public TTS endpoint. It validates that the returned output is a valid `bytes` object with a non-zero length, and parses the binary response checking for standard MP3 magic bytes (ID3 tags or MPEG frame sync headers) to confirm media integrity.
-- **`test_generate_audio_empty_text`**: Ensures the engine safely catches and rejects empty strings before querying the external API to save bandwidth.
-- **`test_generate_audio_invalid_engine`**: Validates exception handling if a developer requests an unsupported TTS engine configuration.
-
-**3. `test_file_processor.py`**
-- **`test_translate_dataframe`**: A purely offline unit test using a mocked translator function. It builds a dummy Pandas DataFrame (simulating an uploaded Excel/CSV), verifies that valid string cells are translated accurately, and confirms that integers and blank cells are skipped to prevent corrupting table data types.
-- **`test_translate_empty_dataframe`**: Verifies that submitting a completely empty DataFrame gracefully passes through the logic loop without causing an index out-of-bounds crash.
-- **`test_extract_text_from_pdf`**: Mocks the internal `MarkItDown` Microsoft PDF parser dependencies. It verifies that when binary PDF bytes are passed, the function returns clean text strings without requiring a live external PDF processing service.
-- **`test_process_file_upload_txt`**: Tests the generic file upload handler to verify standard `.txt` files are decoded cleanly.
-- **`test_process_file_upload_csv`**: Tests the generic file upload handler to ensure CSV/Excel byte streams are properly routed and parsed into structured Pandas DataFrames.
-- **`test_process_file_upload_empty_csv`**: Asserts that passing a 0-byte CSV explicitly throws a readable ValueError ("empty CSV file uploaded") instead of returning unhandled Pandas empty data exceptions to the user UI.
+| Module | Statements | Missing | Coverage | Key Scenarios Tested |
+|---|---|---|---|---|
+| `modules/__init__.py` | 0 | 0 | 100% | Package initialization |
+| `modules/file_processor.py` | 54 | 22 | 59% | CSV/Excel parsing, DataFrame string translation, empty file guards |
+| `modules/gemini_client.py` | 59 | 14 | 76% | Prompt injection interception, JSON parsing errors, live translation |
+| `modules/tts_engine.py` | 38 | 8 | 79% | Markdown stripping, empty input rejection, live MP3 ID3 header validation |
+| **Total** | **151** | **44** | **71%** | **17 passed** |
 
 ---
 
-## Deployment
+## Deployment Guide (Streamlit Community Cloud)
 
-The easiest and most seamless way to deploy this application is using **Streamlit Community Cloud**, which is free and connects directly to your GitHub repository.
+1. Push your repository to GitHub.
+2. Visit [share.streamlit.io](https://share.streamlit.io/) and authenticate with your GitHub account.
+3. Click **"New app"**, select your repository, branch (`main`), and set the main file path to `app.py`.
+4. *(Optional)* In **"Advanced settings..."**, add your `GEMINI_API_KEY` under Secrets.
+5. Click **"Deploy"**. The app deploys seamlessly due to its stateless in-memory architecture.
 
-### Steps to Deploy on Streamlit Community Cloud:
-1. Make sure your code is pushed to a public (or private) repository on GitHub.
-2. Go to [share.streamlit.io](https://share.streamlit.io/) and log in with your GitHub account.
-3. Click the **"New app"** button.
-4. Select the repository, branch (usually `main`), and the main file path (`app.py`).
-5. **Important:** Before clicking deploy, click on **"Advanced settings..."**. In the **Secrets** box, you can securely add your API keys or environmental variables so they aren't exposed in your public code. However, since the app has a UI sidebar where users can input their own Gemini API key, adding it to the secrets is optional.
-6. Click **Deploy!**
+---
 
-Because we refactored the audio generation (`tts_engine.py`) to hold MP3 files strictly in memory (byte streams) instead of writing physical `temp_audio` files to the disk, this application is completely "stateless". This means it is 100% compatible with serverless cloud environments like Streamlit Cloud, Render, or Heroku, which typically block apps from writing files locally.
+## Application Walkthrough & Screenshots
+
+### 1. Application Landing & Configuration
+![capstone-001.png](screenshots/capstone-001.png)
+*Initial view displaying the configuration sidebar, target language selector, and input options.*
+
+### 2. Input Workspace
+![capstone-002.png](screenshots/capstone-002.png)
+*Text entered into the processing area ready for selective translation.*
+
+### 3. Document Extraction & Viewer
+![capstone-003.png](screenshots/capstone-003.png)
+*Extracted document text rendered within the interactive viewer container.*
+
+### 4. Workspace Selection
+![capstone-004.png](screenshots/capstone-004.png)
+*Selecting specific text portions for processing.*
+
+### 5. Translation & Language Detection
+![capstone-005.png](screenshots/capstone-005.png)
+*Gemini detects the source language (English) and outputs context-aware translation in the target language.*
+
+### 6. Speech Synthesis & Audio Player
+![capstone-006.png](screenshots/capstone-006.png)
+*In-memory audio generated via gTTS with integrated player and MP3 download button.*
+
+### 7. Complete Dashboard View
+![capstone-007.png](screenshots/capstone-007.png)
+*Full-page dashboard showing complete end-to-end workflow.*

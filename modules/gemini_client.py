@@ -1,35 +1,40 @@
-from google import genai
-from google.genai import types
+import io
 import json
 import logging
-import io
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
+
 
 class MaliciousInputError(ValueError):
     """Raised when the input text triggers prompt injection guardrails."""
     pass
 
+
 class GeminiAPIError(RuntimeError):
     """Raised when the Gemini API request fails."""
     pass
+
 
 class JSONParseError(ValueError):
     """Raised when the Gemini response is not valid JSON."""
     pass
 
+
 class GeminiClient:
-    def __init__(self, api_key: str = None, model_name: str = 'gemini-3.5-flash'):
-        if api_key:
-            self.client = genai.Client(api_key=api_key)
-        else:
-            self.client = None
+    """Client adapter for Google Gemini Generative AI models."""
+
+    def __init__(self, api_key: str = None, model_name: str = None):
+        if not model_name:
+            raise ValueError("Configuration error: model_name must be provided to GeminiClient.")
         self.model_name = model_name
+        self.client = genai.Client(api_key=api_key) if api_key else None
 
     def _execute_prompt(self, contents) -> str:
         """Helper to execute the Gemini request and handle API exceptions."""
         if not self.client:
-            raise ValueError("API Key is missing")
+            raise ValueError("API Key is missing. Please provide a valid Gemini API key.")
         try:
             response = self.client.models.generate_content(
                 model=self.model_name,
@@ -57,7 +62,7 @@ class GeminiClient:
         Text to translate:
         {text}
         """
-        
+
         response_text = self._execute_prompt(prompt)
         return self._parse_json_response(response_text)
 
@@ -94,7 +99,7 @@ class GeminiClient:
             output_text = output_text[3:]
         if output_text.endswith("```"):
             output_text = output_text[:-3]
-            
+
         try:
             return json.loads(output_text.strip())
         except json.JSONDecodeError as e:

@@ -13,6 +13,11 @@ temp_audio/
 # Media & Documents
 *.pdf
 *.mp3
+*.zip
+*.svg
+*.png
 
 # Testing
 .coverage
+
+

@@ -1,6 +1,6 @@
 {
   "gemini": {
-    "model_name": "gemini-3.5-flash"
+    "model_name": "gemini-3.8-flash"
   },
   "languages": {
     "Spanish": "es",
@@ -18,6 +18,8 @@
     "English": "en"
   },
   "tts": {
-    "engines": ["gTTS", "Google"]
+    "engines": [
+      "gTTS"
+    ]
   }
 }

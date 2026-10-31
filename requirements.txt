@@ -2,14 +2,12 @@ streamlit>=1.40.0
 google-genai
 gTTS
 pandas
-PyPDF2
-pdfplumber
 openpyxl
 streamlit-mic-recorder
 pytest
 pytest-asyncio
+pytest-cov
 markitdown
 beautifulsoup4
 markdown
 python-dotenv
-starlette<0.40.0
